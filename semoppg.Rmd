@@ -1,0 +1,176 @@
+---
+title: "Semesteroppgave"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(gglorenz)
+library(hrbrthemes)
+library(ineq)
+library(bookdown)
+load(url("https://bit.ly/2YBntjg"))
+str(skattetall)
+```
+
+# A
+
+Først henter vi inn skattetall data og lagrer dette i en tabell. Deretter lager vi et plot med lorenz-kurve og Gini indeks.
+
+```{r}
+inntekt <- skattetall %>% 
+  arrange(inntekt)
+  
+inntekt %>%   
+  ggplot(aes(inntekt)) +
+  stat_lorenz(desc = FALSE) +
+  coord_fixed() +
+  geom_abline(linetype = "dashed") +
+  theme_minimal() +
+  hrbrthemes::scale_x_percent() +
+  hrbrthemes::scale_y_percent() +
+  labs(x = "Befolkning i prosent",
+       y = "Inntekt i prosent",
+       title = "Lorenzkurve for Troms") +
+  annotate_ineq(inntekt$inntekt)
+
+befolkning <- inntekt %>% 
+  summarise(n=n())
+  
+gini <- ineq(inntekt$inntekt)
+
+snitt <- mean(skattetall$inntekt)
+```
+
+Vi lager også egne variabler for gini, snittinntekt og befolkning, og lager dette i en ny tabell.
+
+```{r}
+first_column <- c("Kommune", "Troms")
+second_column <- c("Gini", gini*100)
+third_column <- c("Inntekt", snitt)
+forth_column <- c("Personer", befolkning$n)
+
+
+tabell <- data.frame(first_column, second_column, third_column, forth_column)
+tabell
+```
+
+Utifra tabellen ser vi at gjennomsnittsinntekten i Troms fylke er 286 642 og at gini ideksen er på 44,5%. Sammenlignet med Norge, som har en Gini-koeffisient på 0,262 eller 26,2% er ulikhetene i Troms fylke større. Dette kan skyldes at SSB eksluderer studenter i sine målinger, mens vår data inneholder alle over 18 år, også de uten inntekt. Fra grafen ser vi at første desil har tilnermet null i inntekt, altså 0% av total samlet inntekt. [Statistisk sentralbyrå (SSB), 2019](https://www.ssb.no/inntekt-og-forbruk/artikler-og-publikasjoner/slik-maler-ssb-ulikhet) 
+
+Gjennomsnittsinntekten i Troms fylke er også lavere enn det nasjonale gjennomsnittet. Gjennomsnittsinntekten i Norge i 2015 var ifølge Statistisk sentralbyrå på 518 100. I Troms fylke var gjennomsnittinntekten 286 642. Dette er igjen lang under det nasjonale gjennomsnittet. Årsaken til dette kan også være at SSB utelukker alle som ikke mottar lønn for tolv måneder i året, mens vår data inneholder alle i fylket over 18 år. [Statistisk sentralbyrå (SSB), 2016](https://www.ssb.no/arbeid-og-lonn/statistikker/lonnansatt/aar/2016-03-03)
+
+Befolkningstalelt fra tabellen er 138 521, mens befolkingen i Troms fylke i 2015 var på 164 330, noe som igjen kan skyldes at skattetallene ikke regner med de under 18 år. [Statistisk sentralbyrå (SSB), 2016](https://www.ssb.no/statbank/table/01222/tableViewLayout1/)
+
+Det som er verdt å merke seg med denne grafen er at den kun tar inntekt i betrakning. Formue er ikke med i utregningen, og som vi ser ifra dataen er det flere personer i fylket som har store formuer, men ingen inntekt. Disse personene som til vanlig ville betraktes som de rikeste i fylket havner i bunn, siden de ikke har registrert inntekt. 
+
+# B
+
+```{r}
+tromso <- skattetall %>% 
+  filter(kommnr==1902)
+
+harstad <- skattetall %>% 
+  filter(kommnr==1903)
+
+omegn <- skattetall %>% 
+  filter(kommnr>=1904)
+
+skattetall2 <- skattetall %>% 
+  mutate(kommune=kommnr)
+           
+skattetall2 <- skattetall2 %>% 
+  mutate(kommune=recode(kommune,
+                        "1902" = "Tromsø",
+                        "1903" = "Harstad",
+                        ))
+
+skattetall2[is.na(skattetall2)] <- "Omegn"
+
+gini_tromso <- ineq(tromso$inntekt)
+gini_harstad <- ineq(harstad$inntekt)
+gini_omegn <- ineq(omegn$inntekt)
+
+snitt_tromso <- mean(tromso$inntekt)
+snitt_harstad <- mean(harstad$inntekt)
+snitt_omegn <- mean(omegn$inntekt)
+
+per_tromso <- tromso %>% 
+  summarise(n=n())
+per_harstad <- harstad %>% 
+  summarise(n=n())
+per_omegn <- omegn %>% 
+  summarise(n=n())
+
+pros_bef <- skattetall2 %>% 
+  group_by(kommune) %>% 
+  summarise( percent = 100 * n()/nrow(skattetall2))
+```
+
+```{r}
+a <- c("Kommune", "Harstad", "Omegn", "Tromsø")
+b <- c("Gini (%)", gini_harstad*100, gini_omegn*100, gini_tromso*100)
+c <- c("Inntekt", snitt_harstad, snitt_omegn, snitt_tromso)
+d <- c("Personer", per_harstad$n, per_omegn$n, per_tromso$n)
+e <- c("Andel (%)", pros_bef$percent)
+tabell2 <- data.frame(a, b, c, d, e)
+tabell2
+```
+
+Fra utregningne og tabellen ser vi at litt under halvparten, 45% av befolkningen i Troms bor i Tromsø kommune. Tromsø kommune har størst ulikhet i gini-indeks med 46,6%. Av de tre områdene har Harstad kommune størst inntekt, 299 650 kr, og omegn har lavest gini med 42%. Til tross for lavere gini i omeng områdene er det også der vi finner lavest gjennomsnittsinntekt. 
+
+# C
+
+```{r}
+skattetall3 <- skattetall %>% 
+  mutate(netto=inntekt-skatt)
+                  
+skattetall3[skattetall3 < 0] <- 0
+
+skattetall3 %>%   
+  ggplot(aes(netto)) +
+  stat_lorenz(desc = FALSE) +
+  coord_fixed() +
+  geom_abline(linetype = "dashed") +
+  theme_minimal() +
+  hrbrthemes::scale_x_percent() +
+  hrbrthemes::scale_y_percent() +
+  labs(x = "Befolkning i prosent",
+       y = "Nettoinntekt i prosent",
+       title = "Lorenzkurve for Troms") +
+  annotate_ineq(skattetall3$netto)
+```
+
+Forskjellen mellom inntektsfordelingen før og etter skatt er at etter skatt er det en reduksjon i gini på 0,04 eller 4%. Inntektsforskjellene minker etter skatt men som nevnt i oppgave a er det flere av de som har høyest formue men ingen inntekt som er med på å gjøre en forskjell i utregningen. Det betyr at det fremdeles er en litt falsk fremstilling av pengefordelingen i Troms fylke.
+
+# D
+
+```{r}
+skattetall %>% 
+  mutate(skatt=skatt/1e7,
+         inntekt=inntekt/1e7) %>% 
+  ggplot(aes(x=skatt, y=inntekt)) +
+  geom_point() +
+  labs(title="Graf over skatt og inntekt i Troms fylke",
+       x ="Skatt i 10 millioner kr",
+       y = "Inntekt i 10 millioner kr") +
+  theme_bw()
+```
+
+Fra grafen ser vi at det er et klart sammenheng mellom inntekt og skatt. De som har høy inntekt betaler også høy skatt. Vi ser også at det er en veldig liten anndel av befolkingen som har høy inntekt og høy skatt. Majoriteten av befolkingen har under 10 millioner i inntekt, og under 3 millioner i skatt.
+
+# E
+
+```{r}
+skattetall %>% 
+  mutate(skatt=skatt/1e7,
+         formue=formue/1e7) %>% 
+  ggplot(aes(x=skatt, y=formue)) +
+  geom_point() +
+  labs(title="Graf over skatt og formue i Troms fylke",
+       x ="Skatt i 10 millioner kr",
+       y = "Formue i 10 millioner kr") +
+  theme_bw()
+```
+
+Grafene viser til at inntekt blir skattet mer enn formue. I oppgave d så var det et klart sammenheng mellom inntekt og skatt, de som tjente mest skattet mest. Sammenligningen mellom formue og skatt viser noe helt annet. Personen med størst formue i Troms fylke betaler mindre skatt enn flere av de som har mindre formue. 
