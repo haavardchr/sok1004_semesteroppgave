@@ -1,6 +1,7 @@
 ---
 title: "Semesteroppgave"
 output: pdf_document
+bibliography: bibliography.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -46,14 +47,12 @@ snitt <- mean(skattetall$inntekt)
 Vi lager også egne variabler for gini, snittinntekt og befolkning, og lager dette i en ny tabell.
 
 ```{r}
-first_column <- c("Kommune", "Troms")
-second_column <- c("Gini", gini*100)
-third_column <- c("Inntekt", snitt)
-forth_column <- c("Personer", befolkning$n)
-
-
-tabell <- data.frame(first_column, second_column, third_column, forth_column)
-tabell
+tibble(
+  "Fylke" = c("Troms"),
+  "Gini (%)" = c(gini*100),
+  "Inntekt" = c(snitt),
+  "Personer" = c(befolkning$n),
+)
 ```
 
 Utifra tabellen ser vi at gjennomsnittsinntekten i Troms fylke er 286 642 og at gini ideksen er på 44,5%. Sammenlignet med Norge, som har en Gini-koeffisient på 0,262 eller 26,2% er ulikhetene i Troms fylke større. Dette kan skyldes at SSB eksluderer studenter i sine målinger, mens vår data inneholder alle over 18 år, også de uten inntekt. Fra grafen ser vi at første desil har tilnermet null i inntekt, altså 0% av total samlet inntekt. [Statistisk sentralbyrå (SSB), 2019](https://www.ssb.no/inntekt-og-forbruk/artikler-og-publikasjoner/slik-maler-ssb-ulikhet) 
@@ -108,13 +107,42 @@ pros_bef <- skattetall2 %>%
 ```
 
 ```{r}
-a <- c("Kommune", "Harstad", "Omegn", "Tromsø")
-b <- c("Gini (%)", gini_harstad*100, gini_omegn*100, gini_tromso*100)
-c <- c("Inntekt", snitt_harstad, snitt_omegn, snitt_tromso)
-d <- c("Personer", per_harstad$n, per_omegn$n, per_tromso$n)
-e <- c("Andel (%)", pros_bef$percent)
-tabell2 <- data.frame(a, b, c, d, e)
-tabell2
+skattetall2 <- skattetall %>% 
+  mutate(kommune=kommnr)
+
+skattetall2 <- skattetall2 %>% 
+  mutate(kommune=recode(kommune,
+                        "1902" = "Tromsø",
+                        "1903" = "Harstad",
+                        ))
+skattetall2[is.na(skattetall2)] <- "Omegn"
+
+gini.kommune <- skattetall2 %>% 
+  group_by(kommune) %>% 
+  summarise(gini=ineq(inntekt))
+
+inntekt <- skattetall2 %>% 
+  group_by(kommune) %>% 
+  summarise(mean(inntekt))
+
+befolkning <- skattetall2 %>% 
+  group_by(kommune) %>% 
+  summarise(n=n())
+
+pros_bef <- skattetall2 %>% 
+  group_by(kommune) %>% 
+  summarise( percent = 100 * n()/nrow(skattetall2))
+
+```
+
+```{r}
+tibble(
+  "Kommune" = c("Harstad", "Omegn", "Tromsø"),
+  "Gini (%)" = c(gini.kommune$gini*100),
+  "Inntekt" = c(inntekt$`mean(inntekt)`),
+  "Personer" = c(befolkning$n),
+  "Andel (%)" = c(pros_bef$percent)
+)
 ```
 
 Fra utregningne og tabellen ser vi at litt under halvparten, 45% av befolkningen i Troms bor i Tromsø kommune. Tromsø kommune har størst ulikhet i gini-indeks med 46,6%. Av de tre områdene har Harstad kommune størst inntekt, 299 650 kr, og omegn har lavest gini med 42%. Til tross for lavere gini i omeng områdene er det også der vi finner lavest gjennomsnittsinntekt. 
@@ -150,10 +178,12 @@ skattetall %>%
   mutate(skatt=skatt/1e7,
          inntekt=inntekt/1e7) %>% 
   ggplot(aes(x=skatt, y=inntekt)) +
-  geom_point() +
+  geom_point(shape = ".") +
   labs(title="Graf over skatt og inntekt i Troms fylke",
        x ="Skatt i 10 millioner kr",
        y = "Inntekt i 10 millioner kr") +
+  scale_y_continuous() +
+  scale_x_continuous() +
   theme_bw()
 ```
 
@@ -166,11 +196,95 @@ skattetall %>%
   mutate(skatt=skatt/1e7,
          formue=formue/1e7) %>% 
   ggplot(aes(x=skatt, y=formue)) +
-  geom_point() +
+  geom_point(shape = ".") +
   labs(title="Graf over skatt og formue i Troms fylke",
        x ="Skatt i 10 millioner kr",
        y = "Formue i 10 millioner kr") +
+  scale_y_continuous() +
+  scale_x_continuous() +
   theme_bw()
 ```
 
 Grafene viser til at inntekt blir skattet mer enn formue. I oppgave d så var det et klart sammenheng mellom inntekt og skatt, de som tjente mest skattet mest. Sammenligningen mellom formue og skatt viser noe helt annet. Personen med størst formue i Troms fylke betaler mindre skatt enn flere av de som har mindre formue. 
+
+# F
+
+```{r}
+tromso <- skattetall %>% 
+  filter(kommnr==1902)
+harstad <- skattetall %>% 
+  filter(kommnr==1903)
+omegn <- skattetall %>% 
+  filter(kommnr>=1904)
+
+for_harstad <- mean(harstad$formue)
+for_tromso <- mean(tromso$formue)
+for_omegn <- mean(omegn$formue)
+for_troms <- mean(skattetall$formue)
+
+gini_for_harstad <- ineq(harstad$formue)
+gini_for_tromso <- ineq(tromso$formue)
+gini_for_omegn <- ineq(omegn$formue)
+gini_for_troms <- ineq(skattetall$formue)
+
+per_harstad <- harstad %>% 
+  summarise(n=n())
+per_tromso <- tromso %>% 
+  summarise(n=n())
+per_omegn <- omegn %>% 
+  summarise(n=n())
+
+pros_bef <- skattetall2 %>% 
+  group_by(kommune) %>% 
+  summarise(percent = 100*n()/nrow(skattetall2))
+personer <- skattetall2 %>% 
+  summarise(n=n())
+pros_tot <- personer %>% 
+  group_by(n) %>% 
+  summarise(percent = 100*n()/nrow(personer))
+
+tibble(
+  "Kommune" = c("Harstad", "Omegn", "Tromsø", "Troms"),
+  "Gini (%)" = c(gini_for_harstad*100, gini_for_omegn*100, gini_for_tromso*100, gini_for_troms*100),
+  "Formue" = c(for_harstad, for_omegn, for_tromso, for_troms),
+  "Personer" = c(per_harstad$n, per_omegn$n, per_tromso$n, personer$n),
+  "Andel (%)" = c(pros_bef$percent, pros_tot$percent)
+)
+```
+
+# G
+
+```{r}
+aldersgrupper.gini <- skattetall %>% 
+  group_by(aldersgruppe) %>% 
+  summarise(gini=ineq(inntekt))
+
+aldersgrupper.gini %>% 
+  ggplot(aes(x=aldersgruppe, y=gini*100)) +
+  geom_bar(stat = "identity") +
+  labs(title="Gini for aldersgrupper i Troms fylke",
+       x="Aldersgrupper",
+       y="Gini i %") +
+  theme_bw()
+```
+
+# H
+
+```{r}
+test <- skattetall %>% 
+  group_by(aldersgruppe, kjonn) %>% 
+  summarise(gini=ineq(inntekt)) %>% 
+  filter(kjonn %in% c("M", "F"))
+  
+
+test %>% 
+  select(aldersgruppe, kjonn, gini) %>%
+  rename(Kjønn=kjonn) %>% 
+  ggplot(aes(x=aldersgruppe, y=gini*100, col=Kjønn)) +
+  geom_bar(position="dodge", stat="identity", fill="white") +
+  labs(title="Gini for aldersgrupper og kjønn i Troms fylke",
+       x="Aldersgrupper",
+       y="Gini i %") +
+  theme_bw()
+```
+
