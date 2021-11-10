@@ -1,7 +1,6 @@
 ---
 title: "Semesteroppgave"
 output: pdf_document
-bibliography: bibliography.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -64,47 +63,6 @@ Befolkningstalelt fra tabellen er 138 521, mens befolkingen i Troms fylke i 2015
 Det som er verdt å merke seg med denne grafen er at den kun tar inntekt i betrakning. Formue er ikke med i utregningen, og som vi ser ifra dataen er det flere personer i fylket som har store formuer, men ingen inntekt. Disse personene som til vanlig ville betraktes som de rikeste i fylket havner i bunn, siden de ikke har registrert inntekt. 
 
 # B
-
-```{r}
-tromso <- skattetall %>% 
-  filter(kommnr==1902)
-
-harstad <- skattetall %>% 
-  filter(kommnr==1903)
-
-omegn <- skattetall %>% 
-  filter(kommnr>=1904)
-
-skattetall2 <- skattetall %>% 
-  mutate(kommune=kommnr)
-           
-skattetall2 <- skattetall2 %>% 
-  mutate(kommune=recode(kommune,
-                        "1902" = "Tromsø",
-                        "1903" = "Harstad",
-                        ))
-
-skattetall2[is.na(skattetall2)] <- "Omegn"
-
-gini_tromso <- ineq(tromso$inntekt)
-gini_harstad <- ineq(harstad$inntekt)
-gini_omegn <- ineq(omegn$inntekt)
-
-snitt_tromso <- mean(tromso$inntekt)
-snitt_harstad <- mean(harstad$inntekt)
-snitt_omegn <- mean(omegn$inntekt)
-
-per_tromso <- tromso %>% 
-  summarise(n=n())
-per_harstad <- harstad %>% 
-  summarise(n=n())
-per_omegn <- omegn %>% 
-  summarise(n=n())
-
-pros_bef <- skattetall2 %>% 
-  group_by(kommune) %>% 
-  summarise( percent = 100 * n()/nrow(skattetall2))
-```
 
 ```{r}
 skattetall2 <- skattetall %>% 
@@ -271,13 +229,13 @@ aldersgrupper.gini %>%
 # H
 
 ```{r}
-test <- skattetall %>% 
+gini.kjonn <- skattetall %>% 
   group_by(aldersgruppe, kjonn) %>% 
   summarise(gini=ineq(inntekt)) %>% 
   filter(kjonn %in% c("M", "F"))
   
 
-test %>% 
+gini.kjonn %>% 
   select(aldersgruppe, kjonn, gini) %>%
   rename(Kjønn=kjonn) %>% 
   ggplot(aes(x=aldersgruppe, y=gini*100, col=Kjønn)) +
