@@ -1,6 +1,7 @@
 ---
 title: "Semesteroppgave"
 output: pdf_document
+bibliography: bibliography.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -10,6 +11,7 @@ library(gglorenz)
 library(hrbrthemes)
 library(ineq)
 library(bookdown)
+library(rjstat)
 load(url("https://bit.ly/2YBntjg"))
 str(skattetall)
 ```
@@ -54,11 +56,26 @@ tibble(
 )
 ```
 
-Utifra tabellen ser vi at gjennomsnittsinntekten i Troms fylke er 286 642 og at gini ideksen er på 44,5%. Sammenlignet med Norge, som har en Gini-koeffisient på 0,262 eller 26,2% er ulikhetene i Troms fylke større. Dette kan skyldes at SSB eksluderer studenter i sine målinger, mens vår data inneholder alle over 18 år, også de uten inntekt. Fra grafen ser vi at første desil har tilnermet null i inntekt, altså 0% av total samlet inntekt. [Statistisk sentralbyrå (SSB), 2019](https://www.ssb.no/inntekt-og-forbruk/artikler-og-publikasjoner/slik-maler-ssb-ulikhet) 
+Utifra tabellen ser vi at gjennomsnittsinntekten i Troms fylke er 286 642 og at gini ideksen er på 44,5%. Sammenlignet med Norge, som har en Gini-koeffisient på 0,262 eller 26,2% er ulikhetene i Troms fylke større. Dette kan skyldes at SSB eksluderer studenter i sine målinger, mens vår data inneholder alle over 18 år, også de uten inntekt. Fra grafen ser vi at første desil har tilnermet null i inntekt, altså 0% av total samlet inntekt [@eplandjonogtuvnina2019].
 
-Gjennomsnittsinntekten i Troms fylke er også lavere enn det nasjonale gjennomsnittet. Gjennomsnittsinntekten i Norge i 2015 var ifølge Statistisk sentralbyrå på 518 100. I Troms fylke var gjennomsnittinntekten 286 642. Dette er igjen lang under det nasjonale gjennomsnittet. Årsaken til dette kan også være at SSB utelukker alle som ikke mottar lønn for tolv måneder i året, mens vår data inneholder alle i fylket over 18 år. [Statistisk sentralbyrå (SSB), 2016](https://www.ssb.no/arbeid-og-lonn/statistikker/lonnansatt/aar/2016-03-03)
+Gjennomsnittsinntekten i Troms fylke er også lavere enn det nasjonale gjennomsnittet. Gjennomsnittsinntekten i Norge i 2015 var ifølge Statistisk sentralbyrå på 518 100. I Troms fylke var gjennomsnittinntekten 286 642. Dette er igjen lang under det nasjonale gjennomsnittet. Årsaken til dette kan også være at SSB utelukker alle som ikke mottar lønn for tolv måneder i året, mens vår data inneholder alle i fylket over 18 år [@lønn2015].
 
-Befolkningstalelt fra tabellen er 138 521, mens befolkingen i Troms fylke i 2015 var på 164 330, noe som igjen kan skyldes at skattetallene ikke regner med de under 18 år. [Statistisk sentralbyrå (SSB), 2016](https://www.ssb.no/statbank/table/01222/tableViewLayout1/)
+Befolkningstalelt fra tabellen er 138 521, mens befolkingen i Troms fylke i 2015 var på 164 330, noe som igjen kan skyldes at skattetallene ikke regner med de under 18 år [@befolkning2021].
+
+```{r}
+library(readxl)
+bef2015 <- read_excel("C:/Users/hchra/Downloads/01222_20211111-121023.xlsx")
+
+bef2015 <- bef2015 %>% 
+  rename(Fylke=...2,
+         Tall=...3)
+
+tibble(
+  "Fylke" = c(bef2015$Fylke[4]),
+  "Befolking" = c(bef2015$Tall[4])
+)
+```
+
 
 Det som er verdt å merke seg med denne grafen er at den kun tar inntekt i betrakning. Formue er ikke med i utregningen, og som vi ser ifra dataen er det flere personer i fylket som har store formuer, men ingen inntekt. Disse personene som til vanlig ville betraktes som de rikeste i fylket havner i bunn, siden de ikke har registrert inntekt. 
 
@@ -103,7 +120,7 @@ tibble(
 )
 ```
 
-Fra utregningne og tabellen ser vi at litt under halvparten, 45% av befolkningen i Troms bor i Tromsø kommune. Tromsø kommune har størst ulikhet i gini-indeks med 46,6%. Av de tre områdene har Harstad kommune størst inntekt, 299 650 kr, og omegn har lavest gini med 42%. Til tross for lavere gini i omeng områdene er det også der vi finner lavest gjennomsnittsinntekt. 
+Fra utregningene og tabellen ser vi at litt under halvparten, 45% av befolkningen i Troms bor i Tromsø kommune. Tromsø kommune har størst ulikhet i gini med 46,6%. Av de tre områdene har Harstad kommune størst inntekt, 299 650 kr, og omegn har lavest gini med 42%. Til tross for lavere gini i omeng områdene er det også der vi finner lavest gjennomsnittsinntekt. 
 
 # C
 
@@ -129,6 +146,8 @@ skattetall3 %>%
 
 Forskjellen mellom inntektsfordelingen før og etter skatt er at etter skatt er det en reduksjon i gini på 0,04 eller 4%. Inntektsforskjellene minker etter skatt men som nevnt i oppgave a er det flere av de som har høyest formue men ingen inntekt som er med på å gjøre en forskjell i utregningen. Det betyr at det fremdeles er en litt falsk fremstilling av pengefordelingen i Troms fylke.
 
+Denne utregningen gir en indikasjon på at skattesystemet i Norge er med på å reduserer ulikhetene vi har i landet. De som har størst inntekt ender opp med å betale mest skatt, og distansen mellom fattig og rik blir redusert. 
+
 # D
 
 ```{r}
@@ -140,12 +159,14 @@ skattetall %>%
   labs(title="Graf over skatt og inntekt i Troms fylke",
        x ="Skatt i 10 millioner kr",
        y = "Inntekt i 10 millioner kr") +
-  scale_y_continuous() +
-  scale_x_continuous() +
+  scale_y_continuous(breaks=c(0,0.3,0.6,0.9,1.5,2,3,4)) +
+  scale_x_continuous(breaks=c(0,0.1,0.2,0.3,0.4,0.8,1.2)) +
   theme_bw()
 ```
 
-Fra grafen ser vi at det er et klart sammenheng mellom inntekt og skatt. De som har høy inntekt betaler også høy skatt. Vi ser også at det er en veldig liten anndel av befolkingen som har høy inntekt og høy skatt. Majoriteten av befolkingen har under 10 millioner i inntekt, og under 3 millioner i skatt.
+Fra grafen ser vi at det er et klart sammenheng mellom inntekt og skatt. De som har høy inntekt betaler også høy skatt. Vi ser også at det er en veldig liten andel av befolkningen som har høy inntekt og høy skatt. Majoriteten av befolkningen har under 10 millioner i inntekt, og under 3 millioner i skatt.
+
+Om vi hadde tegnet en lineær regresjonsmodell hadde de fleste punktene på grafen havnet i nærheten av denne linjen.  
 
 # E
 
@@ -158,12 +179,16 @@ skattetall %>%
   labs(title="Graf over skatt og formue i Troms fylke",
        x ="Skatt i 10 millioner kr",
        y = "Formue i 10 millioner kr") +
-  scale_y_continuous() +
-  scale_x_continuous() +
+  scale_y_continuous(breaks=c(0,2.5,5,10,20,30,40)) +
+  scale_x_continuous(breaks=c(0,0.1,0.2,0.3,0.4,0.8,1.2)) +
   theme_bw()
 ```
 
-Grafene viser til at inntekt blir skattet mer enn formue. I oppgave d så var det et klart sammenheng mellom inntekt og skatt, de som tjente mest skattet mest. Sammenligningen mellom formue og skatt viser noe helt annet. Personen med størst formue i Troms fylke betaler mindre skatt enn flere av de som har mindre formue. 
+Grafene viser til at inntekt blir skattet mer enn formue. I oppgave D var det et klart sammenheng mellom inntekt og skatt, de som tjente mest skattet mest. Sammenligningen mellom formue og skatt viser noe helt annet. Personen med størst formue i Troms fylke betaler mindre skatt enn flere av de som har mindre formue.
+
+Majoriteten av befolkningen ligger fremdeles rundt origo, en veldig liten andel av befolkningen har enn formue større enn 5 millioner, og skatter mer enn 2 millioner.
+
+
 
 # F
 
@@ -209,6 +234,8 @@ tibble(
   "Andel (%)" = c(pros_bef$percent, pros_tot$percent)
 )
 ```
+Forskjellene i Troms fylke samt øvrige kommuner er klart større når gini regnes for formue kontra inntekt. Vi ser fra oppgave A og B at gini av inntekt er under 50% i fylket og øvrige områder. Gini av formue er mye høyre, rundt 85% for hele fylket og øvrige områder. Samtidig så ser vi at gjennomsnittlig formue er nesten det dobbelte av gjennomsnittlig inntekt, og dette gjelder for alle områdene i Troms og Troms fylke som helhet. 
+
 
 # G
 
@@ -220,11 +247,23 @@ aldersgrupper.gini <- skattetall %>%
 aldersgrupper.gini %>% 
   ggplot(aes(x=aldersgruppe, y=gini*100)) +
   geom_bar(stat = "identity") +
-  labs(title="Gini for aldersgrupper i Troms fylke",
+  labs(title="Gini (inntekt) for aldersgrupper i Troms fylke",
        x="Aldersgrupper",
        y="Gini i %") +
   theme_bw()
 ```
+
+```{r}
+aldersgruppe.andel <- skattetall %>% 
+  group_by(aldersgruppe) %>% 
+  summarise(percent = 100*n()/nrow(skattetall))
+aldersgruppe.andel
+```
+
+
+Ved å dele befolkningen opp i og plotte for gini ser vi at det er klart størst forskjell blant den yngste delen av befolkningen. Inntektsforskjellene i aldersgruppen 0 til 20 er over 60%. Denne gruppen er registrert som 0 til 20, men er egentlig bare bygd opp av de i alderen 18-20. Denne aldergruppen består av `r aldersgruppe.andel$percent[1]`% av befolkningen i Troms.
+
+Vi ser også at det er en reduksjon i gini for hver aldersgruppe fra yngst til eldst. 
 
 # H
 
@@ -246,3 +285,6 @@ gini.kjonn %>%
   theme_bw()
 ```
 
+Gjennom å dele hver aldersgruppe opp i menn og kvinner ser vi at det er en klar forskjell på de to kjønnene. Menn har størst ulikhet innad i hver aldersgruppe. Grafen følger også samme utviklingen som i oppgave G, der det er en endring i gini for hver aldersgruppe, der det er størst ulikhet blant de yngste i befolkningen. 
+
+Den eneste utmerkelsen er at i aldersgruppen 21 til 30 er det større ulikhet blant kvinner enn menn. 
