@@ -56,7 +56,7 @@ tibble(
 )
 ```
 
-Utifra tabellen ser vi at gjennomsnittsinntekten i Troms fylke er 286 642 og at gini ideksen er på 44,5%. Sammenlignet med Norge, som har en Gini-koeffisient på 0,262 eller 26,2% er ulikhetene i Troms fylke større. Dette kan skyldes at SSB eksluderer studenter i sine målinger, mens vår data inneholder alle over 18 år, også de uten inntekt. Fra grafen ser vi at første desil har tilnermet null i inntekt, altså 0% av total samlet inntekt [@eplandjonogtuvnina2019].
+Utifra tabellen ser vi at gjennomsnittsinntekten i Troms fylke er 286 642 og at gini ideksen er på 44,5%. Sammenlignet med Norge, som har en Gini-koeffisient på 0,262 eller 26,2% er ulikhetene i Troms fylke større. Dette kan skyldes at SSB ekskluderer studenter i sine målinger, mens vår data inneholder alle over 18 år, også de uten inntekt. Fra grafen ser vi at første desil har tilnærmet null i inntekt, altså 0% av total samlet inntekt [@eplandjonogtuvnina2019].
 
 Gjennomsnittsinntekten i Troms fylke er også lavere enn det nasjonale gjennomsnittet. Gjennomsnittsinntekten i Norge i 2015 var ifølge Statistisk sentralbyrå på 518 100. I Troms fylke var gjennomsnittinntekten 286 642. Dette er igjen lang under det nasjonale gjennomsnittet. Årsaken til dette kan også være at SSB utelukker alle som ikke mottar lønn for tolv måneder i året, mens vår data inneholder alle i fylket over 18 år [@lønn2015].
 
@@ -288,3 +288,9 @@ gini.kjonn %>%
 Gjennom å dele hver aldersgruppe opp i menn og kvinner ser vi at det er en klar forskjell på de to kjønnene. Menn har størst ulikhet innad i hver aldersgruppe. Grafen følger også samme utviklingen som i oppgave G, der det er en endring i gini for hver aldersgruppe, der det er størst ulikhet blant de yngste i befolkningen. 
 
 Den eneste utmerkelsen er at i aldersgruppen 21 til 30 er det større ulikhet blant kvinner enn menn. 
+
+#Sammendrag
+
+Gjennom denne oppgaven har vi sett på flere oppsummeringer av skattetall. Vi har sammenlignet på tvers av kommuner, aldersgrupper og kjønn. I tillegg til å se på forskjellene mellom inntekt og formue. Vi konstaterte tidlig i oppgaven at den regionale ginien for Troms fylke var mye høyere enn landssnittet, og kunne konkludere med at dette kom av forskjellene mellom måten Statistisk sentralbyrå måler gini og alle observasjonene vi har benyttet. Statistisk sentralbyrå tar ikke studenter med i sine utregninger, noe som fører til en lavere gini enn i vårt eksempel, der alle over 18 år er registrert, til tross for at noen av de ikke har registrert verken inntekt, formue eller skatt.
+
+Vi observerer også i løpet av oppgaven at det er klart større ulikhet på formue enn inntekt. 
